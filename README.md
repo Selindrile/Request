@@ -21,8 +21,10 @@ Commands:
 
 Warnings and Reccomendations:
 
-Be careful with exact lock, if off it will allow anyone on your whitelist or anyone not on your blacklist in that mode to
-input whatever they want as if they were at your console.
-
 Without the use of shortcuts, Request has little functionality outside of party management, I highly reccomend using it.
 With creative use of aliases, you can have Request do almost anything you want and still be relatively safe.
+
+I repeat, GO GET SHORTCUTS.
+
+Also, be careful with exact lock, if off it will allow anyone on your whitelist or anyone not on your blacklist in that mode to
+input whatever they want as if they were at your console.

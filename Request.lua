@@ -131,32 +131,32 @@ function request(message, player)
 	if settings.nicknames:contains(nick:ucfirst()) and not settings.forbidden:contains(request:ucfirst()) then
 		--Party commands to check.
 		if not settings.PartyLock and request == "pass" and (target == "lead" or target == "leader") then
-			windower.send_command('input /pcmd leader '..player..'')
+			windower.chat.input('/pcmd leader '..player..'')
 			
 		elseif not settings.PartyLock and request == "pass" and (target == "alli" or target == "ally" or target == "alliance") then
-			windower.send_command('input /acmd leader '..player..'')
+			windower.chat.input('/acmd leader '..player..'')
 	
 		elseif not settings.PartyLock and (request == "disband" or request == "drop" or request =="leave") and target == "party" then
-			windower.send_command('input /pcmd leave')
+			windower.chat.input('/pcmd leave')
 			
 		elseif not settings.PartyLock and (request == "disband" or request == "drop" or request =="leave") and target == "alliance" then
-			windower.send_command('input /acmd leave')
+			windower.chat.input('/acmd leave')
 			
 		elseif not settings.PartyLock and (((request == "accept" or request == "take") and target == "invite") or request == "join") then
-			windower.send_command('input /join')
+			windower.chat.input('/join')
 		
 		elseif not settings.PartyLock and request == "invite" then
-			if target == "me" or target == " " then windower.send_command('input /pcmd add '..player..'')
-			else windower.send_command('input /pcmd add '..target..'')
+			if target == "me" or target == " " then windower.chat.input('/pcmd add '..player..'')
+			else windower.chat.input('/pcmd add '..target..'')
 			end
 			
 		elseif not settings.PartyLock and request == "alliance" then
-			if target == "me" or target == " " then windower.send_command('input /pcmd add '..player..'')
-			else windower.send_command('input /acmd add '..target..'')
+			if target == "me" or target == " " then windower.chat.input('/pcmd add '..player..'')
+			else windower.chat.input('/acmd add '..target..'')
 			end
 			
 		elseif not settings.PartyLock and request == "kick" then
-			windower.send_command('input /pcmd kick '..target..'')
+			windower.chat.input('/pcmd kick '..target..'')
 
 		elseif request == "exact" and not settings.ExactLock then
 			exactcommand = string.match(message, '%a+ exact (.*)')
@@ -182,26 +182,40 @@ function request(message, player)
 			if request == "stop" and (target == "attack" or target == "attacking") then windower.send_command('attackoff')
 			elseif ((request == "accept" or request == "take") and target == "raise") then
 				windower.send_command('keyboard_blockinput 1;setkey enter down; wait 0.2;setkey enter up;keyboard_blockinput 0')
+			elseif request == "strip" or (request == "get" and target == "naked") then
+				windower.send_command('gs c naked')
 			elseif request == "stand" or (request == "get" and target == "up") then
-				if status == 'Dead' or 'Engaged dead' then
+				if status == 'Dead' or status == 'Engaged dead' then
 					windower.send_command('keyboard_blockinput 1;setkey enter down; wait 0.2;setkey enter up;keyboard_blockinput 0')
 				elseif status == 'Sitting' then
-					windower.send_command('input /sit')
+					windower.chat.input('/sit')
 				elseif status == 'Resting' then
-					windower.send_command('input /heal')
+					windower.chat.input('/heal')
 				end
 			elseif request == "stop" or (request == "stay" and target == "here") then windower.send_command('keyboard_blockinput 1;setkey s down; wait 0.3;setkey s up;keyboard_blockinput 0')
 			elseif target == "bt" or target == "this" then windower.send_command(''..request..' <bt>')
 			elseif target == "it" or target == "t" then windower.send_command(''..request..' <t>')
 			elseif target == "us" or target == "yourself" then windower.send_command(''..request..' <me>')
 			elseif target == "me" or target == "now" or target == "please" or target == nil then windower.send_command(''..request..' '..player..'')
+			elseif request == "gtfo" then
+				local inventory = windower.ffxi.get_items("inventory")
+				
+				windower.add_to_chat(123,''..inventory[1][1]..'')
+				
+				if inventory['Farewell Fly'] then
+					windower.chat.input('/item "Farewell Fly" <me>')
+				elseif inventory['Misanthropy'] then
+					windower.add_to_chat(123,'Found my Scythe!')
+				else
+					windower.add_to_chat(123,'No GTFO Items Found')
+				end
+				
+			elseif request == "cancel" then
+				windower.send_command('cancel '..target..'')
 			else windower.send_command(''..request..' '..target..'')
 			end
-			
 		end
-		
 	end
-	
 end
 
 

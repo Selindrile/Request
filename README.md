@@ -11,7 +11,7 @@ Abbreviation: //rq, //request
 
 Commands:
 * <whitelist|blacklist> <add|remove> <player> - adds or removes a player from blacklist or whitelist.
-* <nickname> <add|remove> <word> - adds or removes a word from nickname list.
+* <nickname|nick> <add|remove> <word> - adds or removes a word from nickname list.
 * mode <whitelist|blacklist> - changes to whitelist or blacklist, if no mode specified then it will print current mode.
 * Partylock <on|off> - turns party lock on or off, if no status specified then it will print current status.
 * Requestlock <on|off> - turns request lock on or off, if no status specified then it will print current status.

@@ -184,6 +184,8 @@ function request(message, player)
 				windower.send_command('keyboard_blockinput 1;setkey enter down; wait 0.2;setkey enter up;keyboard_blockinput 0')
 			elseif request == "strip" or (request == "get" and target == "naked") then
 				windower.send_command('gs c naked')
+			elseif (request == "gear" and target == "up") or ((request == "equip" or request == "wear") and (target == "gear" or target == "clothes")) then
+				windower.send_command('gs c update')
 			elseif request == "stand" or (request == "get" and target == "up") then
 				if status == 'Dead' or status == 'Engaged dead' then
 					windower.send_command('keyboard_blockinput 1;setkey enter down; wait 0.2;setkey enter up;keyboard_blockinput 0')
@@ -197,21 +199,8 @@ function request(message, player)
 			elseif target == "it" or target == "t" then windower.send_command(''..request..' <t>')
 			elseif target == "us" or target == "yourself" then windower.send_command(''..request..' <me>')
 			elseif target == "me" or target == "now" or target == "please" or target == nil then windower.send_command(''..request..' '..player..'')
-			elseif request == "gtfo" then
-				local inventory = windower.ffxi.get_items("inventory")
-				
-				windower.add_to_chat(123,''..inventory[1][1]..'')
-				
-				if inventory['Farewell Fly'] then
-					windower.chat.input('/item "Farewell Fly" <me>')
-				elseif inventory['Misanthropy'] then
-					windower.add_to_chat(123,'Found my Scythe!')
-				else
-					windower.add_to_chat(123,'No GTFO Items Found')
-				end
-				
-			elseif request == "cancel" then
-				windower.send_command('cancel '..target..'')
+			elseif request == "gtfo" then windower.chat.input('/item "Farewell Fly" <me>')
+			elseif request == "cancel" then	windower.send_command('cancel '..target..'')
 			else windower.send_command(''..request..' '..target..'')
 			end
 		end

@@ -194,7 +194,9 @@ function request(message, player)
 				elseif status == 'Resting' then
 					windower.chat.input('/heal')
 				end
-			elseif request == "stop" or (request == "stay" and target == "here") then windower.send_command('keyboard_blockinput 1;setkey s down; wait 0.3;setkey s up;keyboard_blockinput 0')
+			elseif request == "stop" or (request == "stay" and target == "here") then
+				windower.ffxi.run(false)
+				windower.ffxi.follow()
 			elseif target == "bt" or target == "this" then windower.send_command(''..request..' <bt>')
 			elseif target == "it" or target == "t" then windower.send_command(''..request..' <t>')
 			elseif target == "us" or target == "yourself" then windower.send_command(''..request..' <me>')

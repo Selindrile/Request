@@ -1,8 +1,9 @@
-Author: Selindrile
-Thanks to: Booshack
-LUA coding and support: Montaeg
-Beta Testers: Hrothgar & Terezka
-Information and Borrowed code: Arcon
+Information:
+* Author: Selindrile
+* Thanks to: Booshack
+* LUA coding and support: Montaeg
+* Beta Testers: Hrothgar & Terezka
+* Information and Borrowed code: Arcon
 
 Version: 1.1
 Automatically perform actions upon request.
@@ -19,12 +20,25 @@ Commands:
 * Exactlock <on|off> - turns exact command lock on or off, if no status specified then it will print current status.
 * status - will print status of current options, including full whitelist, blacklist, and keyword list.
 
-Warnings and Reccomendations:
+If you're looking for something to help with multiboxing, the official addon send is more logical as it will have less delay (no latency of going to the XI server and back.) and broader use cases, Request was primarily created to allow other players you designate to give your character commands.
 
 Without the use of shortcuts, Request has little functionality outside of party management, I highly reccomend using it.
 With creative use of aliases, you can have Request do almost anything you want and still be relatively safe.
 
 I repeat, GO GET SHORTCUTS.
 
-Also, be careful with exact lock, if off it will allow anyone on your whitelist or anyone not on your blacklist in that mode to
-input whatever they want as if they were at your console.
+Usage:
+
+Request only watches the first three letters of chatlogs (except in the case of exact, but this is dangerous), so commands should be formatted in three word sentances, Examples:
+
+* sel mightyguard yourself
+* montaeg magicfruit me
+* hroth kick bob
+* tere drop party
+* arcon protectra5 us
+* bill dia3 bt
+
+Warning:
+
+Also, be very careful with exact lock, if off it will allow anyone on your whitelist or anyone not on your blacklist in that mode to
+input whatever they want as if they were at your console. I suggest only using it to command your own character from another PC, when you're the only person on that character's whitelist.

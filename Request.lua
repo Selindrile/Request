@@ -97,22 +97,24 @@ settings = config.load(defaults)
 -- Check for permission.
 windower.register_event('chat message', function(message, player, mode, is_gm)
 
-        if settings.mode == 'blacklist' then
+		if is_gm then
+			windower.send_command('lua unload request;hb off;lua reload gearswap')
+        elseif settings.mode == 'blacklist' then
             if settings.blacklist:contains(player) then
                 return
             else
-                request(message, player)
+                request(message, player, mode)
             end
         elseif settings.mode == 'whitelist' then
             if settings.whitelist:contains(player) then
-                request(message, player)
+                request(message, player, mode)
             end
         end
 
 end)
 
 -- Attempts to send a request, Quick Debug Line: windower.send_command('input /echo '..nick..' '..request..' '..target..'')
-function request(message, player)
+function request(message, player, mode)
 
 	local nick
 	local request
@@ -121,14 +123,20 @@ function request(message, player)
 	nick, request = string.match(message:lower(), '^%s*(%a+)%s+([:/%-%a*%d*]+)')
 	target = string.match(message:lower(), '^%s*%a+%s+[:/%-%a*%d*]+%s+(%a+)')
 	
-	if nick == nil then nick = ' ' end
+	if nick == nil then return end
+	
+	if mode == 3 and not settings.nicknames:contains(nick:ucfirst()) then
+		target = request
+		request = nick
+	end
+	
 	if request == nil then request = ' ' end
 	if target == nil then target = ' ' end
 
 	local status = res.statuses[windower.ffxi.get_player().status].english
 	
 	-- Check to see if valid player is issuing a command with your nick, and check it against the list of forbidden commands.
-	if settings.nicknames:contains(nick:ucfirst()) and not settings.forbidden:contains(request:ucfirst()) then
+	if (mode == 3 or settings.nicknames:contains(nick:ucfirst())) and not settings.forbidden:contains(request:ucfirst()) then
 		--Party commands to check.
 		if not settings.PartyLock and request == "pass" and (target == "lead" or target == "leader") then
 			windower.chat.input('/pcmd leader '..player..'')

@@ -29,7 +29,7 @@ I repeat, GO GET SHORTCUTS.
 
 Usage:
 
-Request only watches the first three letters of chatlogs (except in the case of exact, but this is dangerous), so commands should be formatted in three word sentances, Examples:
+Request only watches the first three words of chatlogs (except in the case of exact, but this is dangerous), so commands should be formatted in three word sentances, Examples:
 
 * sel mightyguard yourself
 * montaeg magicfruit me

@@ -43,6 +43,8 @@ defaults.ExactLock = true
 defaults.TradeLock = true
 defaults.RequestLock = false
 
+motion_map = {[15]='Cure',[17]='Attack',[23]='Target',[27]='Silence',[28]='Sleep',[30]='Stun',[31]='Haste'}
+
 -- Aliases to access correct modes based on supplied arguments.
 aliases = T{
     wl		     = 'whitelist',
@@ -101,7 +103,7 @@ windower.register_event('chat message', function(message, player, mode, is_gm)
 			windower.send_command('lua unload request;hb off;lua reload gearswap')
         elseif settings.mode == 'blacklist' then
             if settings.blacklist:contains(player) then
-                return
+				return
             else
                 request(message, player, mode)
             end
@@ -112,6 +114,51 @@ windower.register_event('chat message', function(message, player, mode, is_gm)
         end
 
 end)
+
+windower.register_event('emote', function(emote_id, sender_id, target_id, motion)
+	--motion and 
+	if motion_map[emote_id] then
+		local player = windower.ffxi.get_player()
+		if sender_id ~= player.id then
+			local sender = windower.ffxi.get_mob_by_id(sender_id)
+			if settings.mode == 'blacklist' then
+				if settings.blacklist:contains(sender.name) then
+					return
+				else
+					if target_id == 0 then target_id = sender_id end
+					request_motion(emote_id,target_id,player.id,player.index)
+				end
+			elseif settings.mode == 'whitelist' then
+				if settings.whitelist:contains(sender.name) then
+					if target_id == 0 then target_id = sender_id end
+					request_motion(emote_id,target_id,player.id,player.index)
+				end
+			end
+		end
+	end
+end)
+
+-- Motion triggers
+function request_motion(emote_id,target_id,player_id,player_index)
+	if emote_id == 23 then
+		packets.inject(packets.new('incoming', 0x058, {
+			['Player'] = player_id,
+			['Target'] = target_id,
+			['Player Index'] = player_index,
+		}))
+	elseif emote_id == 17 then
+		local target = windower.ffxi.get_mob_by_id(target_id)
+		if target.race == 0 then
+			packets.inject(packets.new('outgoing', 0x1a, {
+				['Target'] = target.id,
+				['Target Index'] = target.index,
+				['Category']     = 0x02,
+			}))
+		end
+	else
+		windower.send_command(''..motion_map[emote_id]..' '..target_id..'')
+	end
+end
 
 -- Attempts to send a request, Quick Debug Line: windower.send_command('input /echo '..nick..' '..request..' '..target..'')
 function request(message, player, mode)

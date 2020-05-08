@@ -20,6 +20,17 @@ Commands:
 * Exactlock <on|off> - turns exact command lock on or off, if no status specified then it will print current status.
 * status - will print status of current options, including full whitelist, blacklist, and keyword list.
 
+Motions:
+Players on your whitelist may use motion commands, /emote motion will perform the following action on the target:
+
+/grin motion - Stun
+/dance motion - Haste
+/doze motion - Sleep
+/muted motion - Silence
+/smile motion - Cure
+/slap motion - Attack
+/stare motion - Target
+
 If you're looking for something to help with multiboxing, the official addon send is more logical as it will have less delay (no latency of going to the XI server and back.) and broader use cases, Request was primarily created to allow other players you designate to give your character commands.
 
 Without the use of shortcuts, Request has little functionality outside of party management, I highly reccomend using it.

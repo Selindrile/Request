@@ -39,6 +39,7 @@ defaults.blacklist = S{}
 defaults.nicknames = S{}
 defaults.forbidden = S{'Lua','U','Reload','Terminate','Quit','Treasury','Unload', 'Unloadall','S','Say','Exec','Load','L','Linkshell','Sh','Shout','Minimize'}
 defaults.PartyLock = true
+defaults.MotionLock = false
 defaults.ExactLock = true
 defaults.TradeLock = true
 defaults.RequestLock = false
@@ -116,8 +117,7 @@ windower.register_event('chat message', function(message, player, mode, is_gm)
 end)
 
 windower.register_event('emote', function(emote_id, sender_id, target_id, motion)
-	--motion and 
-	if motion_map[emote_id] then
+	if motion and not settings.MotionLock and motion_map[emote_id] then
 		local player = windower.ffxi.get_player()
 		if sender_id ~= player.id then
 			local sender = windower.ffxi.get_mob_by_id(sender_id)
@@ -259,7 +259,6 @@ function request(message, player, mode)
 	end
 end
 
-
 -- Adds names/items to a given list type.
 function add_item(mode, ...)
     local names = S{...}
@@ -349,7 +348,24 @@ windower.register_event('addon command', function(command, ...)
             settings.PartyLock = false
             log('Party Lock turned off.')
         elseif status == 'status' then
-            log('Party Lock currently '..display(settings.PartyLock)..'.')
+            log('Party Lock currently: '..display(settings.PartyLock)..'')
+        else
+            error('Invalid status:', args[1])
+            return
+        end
+		
+	-- Turns Motion Lock on or off
+    elseif command == 'motionlock' then
+        status = args[1] or 'status'
+        status = string.lower(status)
+        if on:contains(status) then
+            settings.MotionLock = true
+            log('Motion Lock turned on.')
+        elseif off:contains(status) then
+            settings.MotionLock = false
+            log('Motion Lock turned off.')
+        elseif status == 'status' then
+            log('Motion Lock currently: '..display(settings.MotionLock)..'')
         else
             error('Invalid status:', args[1])
             return
@@ -366,7 +382,7 @@ windower.register_event('addon command', function(command, ...)
             settings.RequestLock = false
             log('Request Lock turned off.')
         elseif status == 'status' then
-            log('Request Lock currently '..display(settings.RequestLock)..'.')
+            log('Request Lock currently: '..display(settings.RequestLock)..'')
         else
             error('Invalid status:', args[1])
             return
@@ -383,7 +399,7 @@ windower.register_event('addon command', function(command, ...)
             settings.TradeLock = false
             log('Trade Lock turned off.')
         elseif status == 'status' then
-            log('Trade Lock currently '..display(settings.TradeLock)..'.')
+            log('Trade Lock currently: '..display(settings.TradeLock)..'')
         else
             error('Invalid status:', args[1])
             return
@@ -400,7 +416,7 @@ windower.register_event('addon command', function(command, ...)
             settings.ExactLock = false
             log('Exact Lock turned off.')
         elseif status == 'status' then
-            log('Exact Lock currently '..display(settings.ExactLock)..'.')
+            log('Exact Lock currently: '..display(settings.ExactLock)..'')
         else
             error('Invalid status:', args[1])
             return
@@ -436,8 +452,7 @@ windower.register_event('addon command', function(command, ...)
     
     -- Ignores (and prints a warning) if unknown command is passed.
     else
-        warning('Unkown command \''..command..'\', ignored.')
-
+		warning('Unkown command \''..command..'\', ignored.')
     end
 
     config.save(settings)

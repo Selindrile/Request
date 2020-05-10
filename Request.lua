@@ -148,7 +148,7 @@ function request_motion(emote_id,target_id,player_id,player_index)
 		}))
 	elseif emote_id == 17 then
 		local target = windower.ffxi.get_mob_by_id(target_id)
-		if target.race == 0 then
+		if target and target.valid_target and target.spawn_type == 16 and sqrt(target.distance) <= 30 then
 			packets.inject(packets.new('outgoing', 0x1a, {
 				['Target'] = target.id,
 				['Target Index'] = target.index,

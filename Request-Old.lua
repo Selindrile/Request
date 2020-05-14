@@ -29,10 +29,9 @@ packets = require('packets')
 _addon.name = 'Request'
 _addon.author = 'Selindrile'
 _addon.commands = {'request','rq'}
-_addon.version = 2.0
+_addon.version = 1.1
 _addon.language = 'english'
 
-player_name = windower.ffxi.get_player().name
 defaults = T{}
 defaults.mode = 'whitelist'
 defaults.whitelist = S{}
@@ -44,8 +43,6 @@ defaults.MotionLock = false
 defaults.ExactLock = true
 defaults.TradeLock = true
 defaults.RequestLock = false
-allow_target = true
-allow_engage = true
 
 motion_map = {[15]='Cure',[17]='Attack',[23]='Target',[27]='Silence',[28]='Sleep',[30]='Stun',[31]='Haste'}
 
@@ -143,13 +140,13 @@ end)
 
 -- Motion triggers
 function request_motion(emote_id,target_id,player_id,player_index)
-	if emote_id == 23 and allow_target then
+	if emote_id == 23 then
 		packets.inject(packets.new('incoming', 0x058, {
 			['Player'] = player_id,
 			['Target'] = target_id,
 			['Player Index'] = player_index,
 		}))
-	elseif emote_id == 17 and allow_engage then
+	elseif emote_id == 17 then
 		local target = windower.ffxi.get_mob_by_id(target_id)
 		if target and target.valid_target and target.spawn_type == 16 and sqrt(target.distance) <= 30 then
 			packets.inject(packets.new('outgoing', 0x1a, {
@@ -164,159 +161,82 @@ function request_motion(emote_id,target_id,player_id,player_index)
 end
 
 -- Attempts to send a request, Quick Debug Line: windower.send_command('input /echo '..nick..' '..request..' '..target..'')
-function request(message, sender, mode)
-	message = message:lower()
-	message = T(message:split(' '))
-	
-	if mode == 3 and not settings.nicknames:contains(message[1]:ucfirst()) then
-		table.insert(message,1,player_name)
-	end
-	
-	local nick = tostring(table.remove(message, 1):ucfirst())
-	local target = (table.remove(message, #message)):lower()
-	local request = message
-	if target == nil then return end
-	if request[1] == nil then
-		request[1] = target
-		target = ''		
-	end
-	
-	-- Check to see if valid sender is issuing a command with your nick, and check it against the list of forbidden commands.	
-	if (nick == player_name or settings.nicknames:contains(nick)) and not settings.forbidden:contains(request[1]:ucfirst()) then
+function request(message, player, mode)
 
-		if request == "exact" and not settings.ExactLock then
+	local nick
+	local request
+	local target
+	
+	nick, request = string.match(message:lower(), '^%s*(%a+)%s+([:/%-%a*%d*]+)')
+	target = string.match(message:lower(), '^%s*%a+%s+[:/%-%a*%d*]+%s+(%a+)')
+	
+	if nick == nil then return end
+	
+	if request == nil then request = ' ' end
+	if target == nil then target = ' ' end
+
+	local status = res.statuses[windower.ffxi.get_player().status].english
+	
+	-- Check to see if valid player is issuing a command with your nick, and check it against the list of forbidden commands.
+	if settings.nicknames:contains(nick:ucfirst()) and not settings.forbidden:contains(request:ucfirst()) then
+		--Party commands to check.
+		if not settings.PartyLock and request == "pass" and (target == "lead" or target == "leader") then
+			windower.chat.input('/pcmd leader '..player..'')
+			
+		elseif not settings.PartyLock and request == "pass" and (target == "alli" or target == "ally" or target == "alliance") then
+			windower.chat.input('/acmd leader '..player..'')
+	
+		elseif not settings.PartyLock and (request == "disband" or request == "drop" or request =="leave") and target == "party" then
+			windower.chat.input('/pcmd leave')
+			
+		elseif not settings.PartyLock and (request == "disband" or request == "drop" or request =="leave") and target == "alliance" then
+			windower.chat.input('/acmd leave')
+			
+		elseif not settings.PartyLock and (((request == "accept" or request == "take") and target == "invite") or request == "join") then
+			windower.chat.input('/join')
+		
+		elseif not settings.PartyLock and request == "invite" then
+			if target == "me" or target == " " then windower.chat.input('/pcmd add '..player..'')
+			else windower.chat.input('/pcmd add '..target..'')
+			end
+			
+		elseif not settings.PartyLock and request == "alliance" then
+			if target == "me" or target == " " then windower.chat.input('/pcmd add '..player..'')
+			else windower.chat.input('/acmd add '..target..'')
+			end
+			
+		elseif not settings.PartyLock and request == "kick" then
+			windower.chat.input('/pcmd kick '..target..'')
+
+		elseif request == "exact" and not settings.ExactLock then
 			exactcommand = string.match(message, '%a+ exact (.*)')
 			windower.send_command(''..exactcommand..'')
-			return
-		end
-
-		if target == nil then
-			target = ''
-		elseif target == 'me' then
-			target = sender
-		end
-		
-		--Party commands to check.
-		if not settings.PartyLock then
-			if request[1] == "pass" then
-				if request[2] == nil then
-					if target == 'lead' or target == "leader" then
-						windower.chat.input('/pcmd leader '..sender..'')
-					elseif target == "alli" or target == "ally" or target == "alliance" then
-						windower.chat.input('/acmd leader '..sender..'')
-					end
-				elseif request[2] == 'lead' or request[2] == 'leader' then
-					windower.chat.input('/pcmd leader '..target..'')
-				elseif request[2] == "alli" or request[2] == "ally" or request[2] == "alliance" then
-					windower.chat.input('/acmd leader '..target..'')
-				else
-					if request[2] == 'me' then request[2] = sender end
-					if target == 'lead' or target == "leader" then
-						windower.chat.input('/pcmd leader '..request[2]..'')
-					elseif target == "alli" or target == "ally" or target == "alliance" then
-						windower.chat.input('/acmd leader '..request[2]..'')
-					end
+			
+		elseif request == "trade" and not settings.TradeLock then
+			if target == "me" or target == nil then
+				local tradename = player and windower.ffxi.get_mob_by_name(player)
+				if status == 'Idle' and tradename and math.sqrt(tradename.distance) <= 6 and not tradename.is_npc and tradename.id ~= windower.ffxi.get_player().id then
+					windower.send_command('keyboard_blockinput 1;setkey escape;wait .2;setkey escape up;wait .4;setkey escape;wait .2;setkey escape up;wait .4;setkey escape;wait .2;setkey escape up;wait .4;input /target '..player..';wait .2;setkey enter;wait .2;setkey enter up;wait .4;setkey up;wait .2;setkey up up;wait .2;setkey up;wait .2;setkey up up;setkey enter;wait .2;setkey enter up;wait .2;keyboard_blockinput 0')
 				end
-			elseif request[1] == "disband" or request[1] == "drop" or request[1] =="leave" then
-				if request[2] == nil then
-					if target == "party" then
-						windower.chat.input('/pcmd leave')
-					elseif target == "alliance" then
-						windower.chat.input('/acmd leave')
-					end
-				elseif request[2] == "party" then
-					windower.chat.input('/pcmd leave')
-				elseif request[2] == "alliance" then
-					windower.chat.input('/acmd leave')
+			elseif target then
+				local tradename = target and windower.ffxi.get_mob_by_name(target)
+				if status == 'Idle' and tradename and math.sqrt(tradename.distance) <= 6 and not tradename.is_npc and tradename.id ~= windower.ffxi.get_player().id then
+					windower.send_command('keyboard_blockinput 1;setkey escape;wait .2;setkey escape up;wait .4;setkey escape;wait .2;setkey escape up;wait .4;setkey escape;wait .2;setkey escape up;wait .4;input /target '..target..';wait .2;setkey enter;wait .2;setkey enter up;wait .4;setkey up;wait .2;setkey up up;wait .2;setkey up;wait .2;setkey up up;setkey enter;wait .2;setkey enter up;wait .2;keyboard_blockinput 0')
 				end
-			elseif request[1] == "accept" or request[1] == "take" then
-				if target == 'invite' or target == 'party' or target == 'alliance' then
-					windower.chat.input('/join')
-				elseif request[2] and (request[2] == 'invite' or request[2] == 'party' or request[2] == 'alliance') then
-					windower.chat.input('/join')
-				end
-			elseif request[1] == "join" then
-				if target == 'party' or target == 'alliance' or (request[2] and (request[2] == 'party' or request[2] == 'alliance')) then
-					windower.chat.input('/join')
-				end
-			elseif request == "invite" or request == "alliance" then
-				if request[2] == nil then
-					if target == '' then
-						windower.chat.input('/pcmd add '..sender..'')
-					else
-						windower.chat.input('/pcmd add '..target..'')
-					end
-				elseif request[2] == 'me' then
-					windower.chat.input('/pcmd add '..sender..'')
-				else
-					windower.chat.input('/pcmd add '..request[2]..'')
-				end
-			elseif request == "kick" then
-				if request[2] == nil then
-					windower.chat.input('/pcmd kick '..target..'')
-				elseif request[2] == 'me' then
-					windower.chat.input('/pcmd kick '..sender..'')
-				else
-					windower.chat.input('/pcmd kick '..request[2]..'')
-				end
+			else
 			end
-		end
+
 		
 		--Anything else, mostly send on to shortcuts and user aliases, could potentially send short addon commands.
-		if not settings.RequestLock then
-			local status = res.statuses[windower.ffxi.get_player().status].english
-			
-			if request[1] == 'tele' or request[1] == 'teleport' or request[1] == 'telly' then
-				if request[2] then
-					windower.send_command('teleport-'..request[2]..'')
-				else
-					windower.send_command('teleport-'..target..'')
-				end
-			elseif request[1] == 'recall' then
-				if request[2] then
-					windower.send_command('recall-'..request[2]..'')
-				else
-					windower.send_command('recall-'..target..'')
-				end
-			elseif request[1] == "disengage" or request[1] == "unengage" then
-				windower.send_command('attackoff')
-			elseif request[1] == "stop" then
-				if not request[2] then
-					if target == "attack" or target == "attacking" then 
-						windower.send_command('attackoff')
-					elseif target == "moving" or target == '' then
-						windower.send_command('attackoff')
-						windower.ffxi.run(false)
-						windower.ffxi.follow()
-					end
-				elseif request[2] == "attack" or request[2] == "attacking" then 
-					windower.send_command('attackoff')
-				elseif request[2] == "moving" or request[2] == '' then
-					windower.send_command('attackoff')
-					windower.ffxi.run(false)
-					windower.ffxi.follow()
-				end
-			elseif request[1] == "stay" then
-				if not request[2] then
-					if target == "here" or '' then
-						windower.ffxi.run(false)
-						windower.ffxi.follow()
-					end
-				elseif request[2] == "here" then
-					windower.ffxi.run(false)
-					windower.ffxi.follow()
-				end	
-			elseif request[1] == "accept" or request[1] == "take" then
-				if target == 'raise' or target == 'arise' or (request[2] and (request[2] == 'raise' or request[2] == 'arise')) then
-					if status == 'Dead' or status == 'Engaged dead' then
-						windower.send_command('keyboard_blockinput 1;setkey enter down; wait 0.2;setkey enter up;keyboard_blockinput 0')
-					end
-				end
-			elseif request[1] == "strip" then
+		elseif not settings.RequestLock then
+			if request == "stop" and (target == "attack" or target == "attacking") then windower.send_command('attackoff')
+			elseif ((request == "accept" or request == "take") and target == "raise") then
+				windower.send_command('keyboard_blockinput 1;setkey enter down; wait 0.2;setkey enter up;keyboard_blockinput 0')
+			elseif request == "strip" or (request == "get" and target == "naked") then
 				windower.send_command('gs c naked')
-			elseif request[1] == "get" and (target == "naked" or (request[2] and request[2] == "naked")) then
-				windower.send_command('gs c naked')
-			elseif request[1] == "stand" or (request[1] == "get" and (target == "up" or (request[2] and request[2] == "up"))) then
+			elseif (request == "gear" and target == "up") or ((request == "equip" or request == "wear") and (target == "gear" or target == "clothes")) then
+				windower.send_command('gs c update')
+			elseif request == "stand" or (request == "get" and target == "up") then
 				if status == 'Dead' or status == 'Engaged dead' then
 					windower.send_command('keyboard_blockinput 1;setkey enter down; wait 0.2;setkey enter up;keyboard_blockinput 0')
 				elseif status == 'Sitting' then
@@ -324,32 +244,16 @@ function request(message, sender, mode)
 				elseif status == 'Resting' then
 					windower.chat.input('/heal')
 				end
-			else
-				
-				if request[2] then
-					request = table.concat(request,'',1,2)
-				else
-					request = table.concat(request,'')
-				end
-				
-				if target == sender or target == 'it' then
-					windower.send_command(''..request..' '..target..'')
-				elseif target == "bt" or target == "this" then
-					windower.send_command(''..request..' <bt>')
-				elseif target == "us" or target == "yourself" then
-					windower.send_command(''..request..' <me>')				
-				elseif target == "now" or target == "please" or target == '' then
-					windower.send_command(''..request..' '..sender..'')
-				elseif request == "gtfo" then
-					windower.chat.input('/item "Farewell Fly" <me>')
-				elseif request == "cancel" then
-					windower.send_command('cancel '..target..'')
-				elseif target ~= '' then
-					target = get_closest_mob_id_by_name(target)
-					windower.send_command(''..request..' '..target..'')
-				else
-					windower.send_command(''..request..'')
-				end
+			elseif request == "stop" or (request == "stay" and target == "here") then
+				windower.ffxi.run(false)
+				windower.ffxi.follow()
+			elseif target == "bt" or target == "this" then windower.send_command(''..request..' <bt>')
+			elseif target == "it" or target == "t" then windower.send_command(''..request..' <t>')
+			elseif target == "us" or target == "yourself" then windower.send_command(''..request..' <me>')
+			elseif target == "me" or target == "now" or target == "please" or target == nil then windower.send_command(''..request..' '..player..'')
+			elseif request == "gtfo" then windower.chat.input('/item "Farewell Fly" <me>')
+			elseif request == "cancel" then	windower.send_command('cancel '..target..'')
+			else windower.send_command(''..request..' '..target..'')
 			end
 		end
 	end
@@ -396,27 +300,25 @@ function remove_item(mode, ...)
 end
 
 windower.register_event('incoming chunk', function(id, original, modified, injected, blocked)
-	if not settings.TradeLock then
-		if id == 0x021 then
-			local packet = packets.parse('incoming',original)
-			trader_name = windower.ffxi.get_mob_by_id(packet['Player']).name
-			if settings.whitelist:contains(trader_name) then
-				windower.packets.inject_outgoing(0x33,string.char(0x33,0x06,0,0,0,0,0,0,0,0,0,0))
-			end
-		elseif id == 0x022 then
-			local packet = packets.parse('incoming',original)
-				if packet['Type'] == 2 then
-				trader_name = windower.ffxi.get_mob_by_id(packet['Player']).name
-				if trade_count and settings.whitelist:contains(trader_name) then
-					windower.packets.inject_outgoing(0x33,string.char(0x33,0x06,0,0,0x02,0,0,0, (trade_count%256), math.floor(trade_count/256),0,0))
-				end
-			else
-				trade_count = 0
-			end
-		elseif id == 0x023 then
-			trade_count = original:byte(9)+original:byte(10)*256
-		end
-	end
+    if id == 0x021 then
+        local packet = packets.parse('incoming',original)
+        trader_name = windower.ffxi.get_mob_by_id(packet['Player']).name
+        if settings.whitelist:contains(trader_name) and not settings.TradeLock then
+            windower.packets.inject_outgoing(0x33,string.char(0x33,0x06,0,0,0,0,0,0,0,0,0,0))
+        end
+    elseif id == 0x022 then
+        local packet = packets.parse('incoming',original)
+            if packet['Type'] == 2 then
+            trader_name = windower.ffxi.get_mob_by_id(packet['Player']).name
+            if trade_count and settings.whitelist:contains(trader_name) and not settings.TradeLock then
+                windower.packets.inject_outgoing(0x33,string.char(0x33,0x06,0,0,0x02,0,0,0, (trade_count%256), math.floor(trade_count/256),0,0))
+            end
+        else
+            trade_count = 0
+        end
+    elseif id == 0x023 then
+        trade_count = original:byte(9)+original:byte(10)*256
+    end
 end)
 
 windower.register_event('addon command', function(command, ...)
@@ -451,24 +353,6 @@ windower.register_event('addon command', function(command, ...)
             error('Invalid status:', args[1])
             return
         end
-		
-	elseif command == 'target' then
-		if allow_target then
-			allow_target = false
-			log('Targetting turned off.')
-		else
-			allow_target = true
-			log('Targetting turned on.')
-		end
-	
-	elseif command == 'engage' then
-		if allow_engage then
-			allow_engage = false
-			log('Engaging turned off.')
-		else
-			allow_engage = true
-			log('Engaging turned on.')
-		end
 		
 	-- Turns Motion Lock on or off
     elseif command == 'motionlock' then
@@ -582,33 +466,4 @@ display = function(setting)
     end
 
     return tostring(setting)
-end
-
-function get_closest_mob_id_by_name(name)
-	local name = get_fuzzy_name(name)
-	local mobs = windower.ffxi.get_mob_array()
-	local fuzzy_list = T{}
-	local best_match = T{}
-
-	for i, mob in pairs(mobs) do
-		if mob.valid_target then
-			local fuzzy_mob_name = get_fuzzy_name(mob.name)
-			if (name:length() >= 3 and fuzzy_mob_name:contains(name)) or fuzzy_mob_name == name then
-				fuzzy_list[mob.id] = mob
-				fuzzy_list[mob.id].score = fuzzy_mob_name:length() - name:length()
-			end
-		end
-	end
-	
-	for i, mob in pairs(fuzzy_list) do
-		if (not best_match.score or mob.score < best_match.score) or (mob.score == best_match.score and (mob.distance < best_match.distance)) then
-			best_match = mob
-		end
-	end
-
-	return best_match.id or name
-end
-
-function get_fuzzy_name(name)
-	return name:lower():gsub("%s", ""):gsub("%p", "")
 end

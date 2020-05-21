@@ -261,7 +261,7 @@ function request(message, sender, mode)
 				else
 					windower.chat.input('/pcmd add '..request[2]..'')
 				end
-			elseif request == "kick" then
+			elseif request[1] == "kick" then
 				if request[2] == nil then
 					windower.chat.input('/pcmd kick '..target..'')
 				elseif request[2] == 'me' then

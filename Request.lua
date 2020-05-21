@@ -169,10 +169,12 @@ function request(message, sender, mode)
 	message = T(message:split(' '))
 	
 	if mode == 3 and not settings.nicknames:contains(message[1]:ucfirst()) then
-		table.insert(message,1,player_name)
+		table.insert(message,0,player_name)
+		windower.add_to_chat(7,'Inserted Name')
 	end
 	
 	local nick = tostring(table.remove(message, 1):ucfirst())
+	if #message == 0 then return end
 	local target = (table.remove(message, #message)):lower()
 	local request = message
 	if target == nil then return end
@@ -180,7 +182,7 @@ function request(message, sender, mode)
 		request[1] = target
 		target = ''		
 	end
-	
+
 	-- Check to see if valid sender is issuing a command with your nick, and check it against the list of forbidden commands.	
 	if (nick == player_name or settings.nicknames:contains(nick)) and not settings.forbidden:contains(request[1]:ucfirst()) then
 
@@ -195,6 +197,14 @@ function request(message, sender, mode)
 		elseif target == 'me' then
 			target = sender
 		end
+		
+		--[[Test Code Block
+		if sender then windower.add_to_chat(7,'sender: '..sender..'') end
+		if nick then windower.add_to_chat(7,'nick: '..nick..'') end
+		if target then windower.add_to_chat(7,'target: '..target..'') end	
+		if request[1] then windower.add_to_chat(7,'request[1]: '..request[1]..'') end
+		if request[2] then windower.add_to_chat(7,'request[2]: '..request[1]..'') end
+		]]
 		
 		--Party commands to check.
 		if not settings.PartyLock then
@@ -239,7 +249,7 @@ function request(message, sender, mode)
 				if target == 'party' or target == 'alliance' or (request[2] and (request[2] == 'party' or request[2] == 'alliance')) then
 					windower.chat.input('/join')
 				end
-			elseif request == "invite" or request == "alliance" then
+			elseif request[1] == "invite" or request[1] == "alliance" then
 				if request[2] == nil then
 					if target == '' then
 						windower.chat.input('/pcmd add '..sender..'')

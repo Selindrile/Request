@@ -170,7 +170,6 @@ function request(message, sender, mode)
 	
 	if mode == 3 and not settings.nicknames:contains(message[1]:ucfirst()) then
 		table.insert(message,0,player_name)
-		windower.add_to_chat(7,'Inserted Name')
 	end
 	
 	local nick = tostring(table.remove(message, 1):ucfirst())

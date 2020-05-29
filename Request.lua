@@ -169,9 +169,9 @@ function request(message, sender, mode)
 	message = T(message:split(' '))
 	
 	if mode == 3 and not settings.nicknames:contains(message[1]:ucfirst()) then
-		table.insert(message,0,player_name)
+		table.insert(message,1,player_name)
 	end
-	
+
 	local nick = tostring(table.remove(message, 1):ucfirst())
 	if #message == 0 then return end
 	local target = (table.remove(message, #message)):lower()

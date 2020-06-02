@@ -124,6 +124,7 @@ windower.register_event('emote', function(emote_id, sender_id, target_id, motion
 		local player = windower.ffxi.get_player()
 		if sender_id ~= player.id then
 			local sender = windower.ffxi.get_mob_by_id(sender_id)
+			if not sender then return end
 			if settings.mode == 'blacklist' then
 				if settings.blacklist:contains(sender.name) then
 					return

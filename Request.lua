@@ -44,10 +44,17 @@ defaults.MotionLock = false
 defaults.ExactLock = true
 defaults.TradeLock = true
 defaults.RequestLock = false
-allow_target = true
-allow_engage = true
+defaults.AllowTarget = true
+defaults.AllowEngage = true
 
 motion_map = {[15]='Cure',[17]='Attack',[23]='Target',[27]='Silence',[28]='Sleep',[30]='Stun',[31]='Haste'}
+-- 15 = "smile"
+-- 17 = "slap"
+-- 23 = "stare"
+-- 27 = "muted"
+-- 28 = "doze"
+-- 30 = "grin"
+-- 31 = "dance"
 
 -- Aliases to access correct modes based on supplied arguments.
 aliases = T{
@@ -144,20 +151,24 @@ end)
 
 -- Motion triggers
 function request_motion(emote_id,target_id,player_id,player_index)
-	if emote_id == 23 and allow_target then
-		packets.inject(packets.new('incoming', 0x058, {
-			['Player'] = player_id,
-			['Target'] = target_id,
-			['Player Index'] = player_index,
-		}))
-	elseif emote_id == 17 and allow_engage then
-		local target = windower.ffxi.get_mob_by_id(target_id)
-		if target and target.valid_target and target.spawn_type == 16 and sqrt(target.distance) <= 30 then
-			packets.inject(packets.new('outgoing', 0x1a, {
-				['Target'] = target.id,
-				['Target Index'] = target.index,
-				['Category']     = 0x02,
+	if emote_id == 23 then
+		if settings.AllowTarget then
+			packets.inject(packets.new('incoming', 0x058, {
+				['Player'] = player_id,
+				['Target'] = target_id,
+				['Player Index'] = player_index,
 			}))
+		end
+	elseif emote_id == 17 then
+		if settings.AllowEngage then
+			local target = windower.ffxi.get_mob_by_id(target_id)
+			if target and target.valid_target and target.spawn_type == 16 and sqrt(target.distance) <= 30 then
+				packets.inject(packets.new('outgoing', 0x1a, {
+					['Target'] = target.id,
+					['Target Index'] = target.index,
+					['Category']     = 0x02,
+				}))
+			end
 		end
 	else
 		windower.send_command(''..motion_map[emote_id]..' '..target_id..'')
@@ -463,20 +474,20 @@ windower.register_event('addon command', function(command, ...)
         end
 		
 	elseif command == 'target' then
-		if allow_target then
-			allow_target = false
+		if settings.AllowTarget then
+			settings.AllowTarget = false
 			log('Targetting turned off.')
 		else
-			allow_target = true
+			settings.AllowTarget = true
 			log('Targetting turned on.')
 		end
 	
 	elseif command == 'engage' then
-		if allow_engage then
-			allow_engage = false
+		if settings.AllowEngage then
+			settings.AllowEngage = false
 			log('Engaging turned off.')
 		else
-			allow_engage = true
+			settings.AllowEngage = true
 			log('Engaging turned on.')
 		end
 		
@@ -575,6 +586,9 @@ windower.register_event('addon command', function(command, ...)
 	log('Request Lock:', display(settings.RequestLock))
 	log('Exact Lock:', display(settings.ExactLock))
 	log('Trade Lock:', display(settings.TradeLock))
+	log('Motion Lock:', display(settings.MotionLock))
+	log('Allow Targetting:', display(settings.AllowTarget))
+	log('Allow Engaging:', display(settings.AllowEngage))
     
     -- Ignores (and prints a warning) if unknown command is passed.
     else

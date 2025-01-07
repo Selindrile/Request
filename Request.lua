@@ -32,7 +32,12 @@ _addon.commands = {'request','rq'}
 _addon.version = 2.0
 _addon.language = 'english'
 
-player_name = windower.ffxi.get_player().name
+if windower.ffxi.get_info().logged_in then
+	player_name = windower.ffxi.get_player().name
+else
+	player_name = ''
+end
+
 defaults = T{}
 defaults.mode = 'whitelist'
 defaults.whitelist = S{}
@@ -46,6 +51,10 @@ defaults.TradeLock = true
 defaults.RequestLock = false
 defaults.AllowTarget = true
 defaults.AllowEngage = true
+
+windower.register_event('login', function(name)
+    player_name = name
+end)
 
 motion_map = {[15]='Cure',[17]='Attack',[23]='Target',[27]='Silence',[28]='Sleep',[30]='Stun',[31]='Haste'}
 -- 15 = "smile"
